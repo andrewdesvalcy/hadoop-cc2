@@ -10,18 +10,18 @@
 ```
 .
 ├── Nom1_Nom2.md                          ← ce rapport
-├── data/
-│   └── tags.csv                          ← fichier source complet (1 093 361 lignes, 37 Mo)
-├── scripts/
-│   ├── tags_per_movie.py                 ← Q1 : tags par film
-│   ├── tags_per_user.py                  ← Q2 : tags par utilisateur
-│   ├── tag_count.py                      ← Q4 : fréquence des tags
-│   └── tags_per_movie_user.py            ← Q5 : tags par (film, user)
-└── results/
-    ├── output_tags_per_movie.txt          ← résultats Q1 (45 251 lignes)
-    ├── output_tags_per_user.txt           ← résultats Q2 (14 592 lignes)
-    ├── output_tag_count.txt               ← résultats Q4 (65 361 lignes)
-    └── output_tags_per_movie_user.txt     ← résultats Q5 (305 356 lignes)
+
+├── tags.csv                          ← fichier source complet (1 093 361 lignes, 37 Mo)
+
+├── tags_per_movie.py                 ← Q1 : tags par film
+├── tags_per_user.py                  ← Q2 : tags par utilisateur
+├── tag_count.py                      ← Q4 : fréquence des tags
+├── tags_per_movie_user.py            ← Q5 : tags par (film, user)
+
+├── output_tags_per_movie.txt         ← résultats Q1 (45 251 lignes)
+├── output_tags_per_user.txt          ← résultats Q2 (14 592 lignes)
+├── output_tag_count.txt               ← résultats Q4 (65 361 lignes)
+└── output_tags_per_movie_user.txt    ← résultats Q5 (305 356 lignes)
 ```
 
 ---
@@ -61,7 +61,7 @@ hdfs dfs -D dfs.blocksize=67108864 -put tags.csv /user/maria_dev/tags_64mb.csv
 
 **Démarche :** Pour chaque ligne valide, le mapper émet `(movieId, 1)`. Le reducer reçoit tous les 1 associés à un même film et les additionne. C'est l'équivalent d'un `GROUP BY movieId COUNT(*)` en SQL.
 
-**Script [`scripts/tags_per_movie.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/scripts/tags_per_movie.py) :**
+**Script [`tags_per_movie.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/tags_per_movie.py) :**
 
 ```python
 from mrjob.job import MRJob
@@ -130,7 +130,7 @@ python scripts/tags_per_movie.py -r hadoop \
 "3949"      1637
 ```
 
-**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/results/output_tags_per_movie.txt)**
+**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/output_tags_per_movie.txt)**
 
 **Analyse :** Le film `260` (*Star Wars: Episode IV — A New Hope*) arrive en tête avec 6 180 tags, ce qui reflète sa popularité dans la communauté MovieLens. Sur les 45 251 films présents dans le fichier, 6 874 n'ont reçu qu'un seul tag, et la moyenne est de 24,2 tags par film. La distribution est donc très asymétrique : quelques blockbusters concentrent l'essentiel des annotations.
 
@@ -140,7 +140,7 @@ python scripts/tags_per_movie.py -r hadoop \
 
 **Démarche :** Même logique que la Q1, en changeant uniquement la clé d'émission du mapper : on émet `(userId, 1)` au lieu de `(movieId, 1)`. Chaque reducer agrège le total de tags posés par un même utilisateur.
 
-**Script [`scripts/tags_per_user.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/scripts/tags_per_user.py) :**
+**Script [`tags_per_user.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/tags_per_user.py) :**
 
 ```python
 from mrjob.job import MRJob
@@ -209,7 +209,7 @@ python scripts/tags_per_user.py -r hadoop \
 "141361"    3922
 ```
 
-**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/results/output_tags_per_user.txt)**
+**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/output_tags_per_user.txt)**
 
 **Analyse :** L'utilisateur `6550` est massivement au-dessus des autres avec 183 356 tags — soit environ 17% de l'ensemble du fichier à lui seul. La médiane est de 5 tags par utilisateur, et 9 417 utilisateurs sur 14 592 en ont posé moins de 10. On est typiquement face à une loi de Pareto : une minorité d'utilisateurs très actifs produit la grande majorité du contenu.
 
@@ -244,7 +244,7 @@ Le fichier `tags.csv` pèse exactement **38 810 332 octets (37,01 Mo)**. Étant 
 
 **Démarche :** Cette fois, la clé du mapper est le tag lui-même. On normalise avec `.strip().lower()` pour regrouper les variantes de casse (`Sci-Fi` et `sci-fi` doivent compter comme le même tag). Le reducer somme les occurrences par tag.
 
-**Script [`scripts/tag_count.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/scripts/tag_count.py) :**
+**Script [`tag_count.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/tag_count.py) :**
 
 ```python
 from mrjob.job import MRJob
@@ -313,7 +313,7 @@ python scripts/tag_count.py -r hadoop \
 "drama"               3135
 ```
 
-**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/results/output_tag_count.txt)**
+**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/output_tag_count.txt)**
 
 **Analyse :** Sur les 65 361 tags distincts recensés, 31 696 (soit 48%) n'ont été utilisés qu'une seule fois — ce sont des tags très spécifiques ou des fautes de frappe. À l'inverse, seulement 156 tags dépassent les 1 000 utilisations. `"sci-fi"` domine avec 8 795 occurrences, ce qui est cohérent avec la composition du catalogue MovieLens, très orienté science-fiction et fantastique. La présence de `"bd-r"` (format Blu-ray) parmi les tops indique que certains utilisateurs annotent aussi les caractéristiques techniques du support, pas seulement le contenu.
 
@@ -323,7 +323,7 @@ python scripts/tag_count.py -r hadoop \
 
 **Démarche :** On veut savoir, pour chaque paire (film, utilisateur), combien de tags différents cet utilisateur a posés sur ce film. La clé composite doit être `(movieId, userId)`. On sérialise cette paire en JSON pour éviter tout conflit de parsing (un simple `movieId + "_" + userId` serait risqué si les IDs contenaient ce caractère). Le reducer comptabilise les 1 reçus pour chaque paire.
 
-**Script [`scripts/tags_per_movie_user.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/scripts/tags_per_movie_user.py) :**
+**Script [`tags_per_movie_user.py`](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/tags_per_movie_user.py) :**
 
 ```python
 from mrjob.job import MRJob
@@ -394,7 +394,7 @@ python scripts/tags_per_movie_user.py -r hadoop \
 "film=72998, user=155146"   69
 ```
 
-**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/results/output_tags_per_movie_user.txt)**
+**[→ Résultats complets](https://github.com/andrewdesvalcy/hadoop-cc2/blob/main/output_tags_per_movie_user.txt)**
 
 **Analyse :** L'utilisateur `31047` a tagué le film `318` (*The Shawshank Redemption*) avec 337 tags distincts. On retrouve ce même utilisateur pour plusieurs films dans le top, ce qui est cohérent avec les 8 463 tags qu'il a posés au total (Q2). Le film `296` (*Pulp Fiction*) revient lui aussi plusieurs fois dans le top, avec différents utilisateurs très actifs. Ce résultat croise et confirme les observations des Q1 et Q2 : les mêmes films populaires et les mêmes utilisateurs hyperactifs se retrouvent systématiquement en tête.
 

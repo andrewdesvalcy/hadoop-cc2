@@ -1,6 +1,6 @@
 # CC2 – Hadoop MapReduce : Analyse du fichier `tags.csv` (MovieLens 25M)
 
-**Auteurs :** Andrew DESVALCY, Tristan CHABANEL  
+**Auteurs :** Andrew DESVALCY, Tristan CHABANEL, Arnaud CORDIER  
 **Fichier source :** `ml-25m/tags.csv` — 1 093 361 lignes, 37,01 Mo
 
 ---
@@ -9,7 +9,7 @@
 
 ```
 .
-├── Nom1_Nom2.md                          ← ce rapport
+├── DESVALCY_CHABANEL.md                          ← ce rapport
 
 ├── tags.csv                          ← fichier source complet (1 093 361 lignes, 37 Mo)
 

@@ -43,6 +43,63 @@ Deux points importants observés lors de l'inspection du fichier :
 - Les fins de ligne sont au format Windows (`\r\n`), ce qui peut provoquer des artefacts dans les clés si on ne fait pas de `.strip()` dans le mapper
 - Certaines lignes sont mal formées (colonnes manquantes ou malformées), ce qui impose un bloc `try/except` pour ne pas faire planter le job
 
+### Connexion au cluster Hadoop
+
+La connexion au sandbox HDP se fait via SSH depuis un terminal Windows (PowerShell) :
+
+```bash
+ssh maria_dev@127.0.0.1 -p 2222
+# mot de passe : maria_dev
+```
+
+### Précautions avant de commencer
+
+**1. Vérifier que HDFS est démarré :**
+
+```bash
+hdfs dfsadmin -report
+```
+
+Si la commande échoue avec `Connection refused`, HDFS n'est pas démarré. Il faut passer par l'interface Ambari sur `http://localhost:8080` (login : `admin` / `admin`), puis aller dans **Services → HDFS → Start**.
+
+**2. Vérifier que Python et mrjob sont disponibles :**
+
+```bash
+python --version
+pip show mrjob
+```
+
+Si mrjob n'est pas installé :
+
+```bash
+pip install mrjob --user
+```
+
+**3. Transférer les fichiers depuis le PC local vers le cluster :**
+
+Le fichier `tags.csv` et les scripts Python doivent être copiés sur le cluster. Depuis un terminal Windows (pas dans le SSH) :
+
+Depuis un terminal Windows PowerShell (**pas dans le SSH**, ouvrir une nouvelle fenêtre) :
+
+```bash
+# Transférer le fichier de données
+scp -P 2222 C:\chemin\vers\ton\dossier\tags.csv maria_dev@127.0.0.1:~/
+
+# Transférer les scripts un par un
+scp -P 2222 C:\chemin\vers\ton\dossier\tags_per_movie.py maria_dev@127.0.0.1:~/
+scp -P 2222 C:\chemin\vers\ton\dossier\tags_per_user.py maria_dev@127.0.0.1:~/
+scp -P 2222 C:\chemin\vers\ton\dossier\tag_count.py maria_dev@127.0.0.1:~/
+scp -P 2222 C:\chemin\vers\ton\dossier\tags_per_movie_user.py maria_dev@127.0.0.1:~/
+```
+
+> Remplace `C:\chemin\vers\ton\dossier\` par le chemin réel où tu as mis les fichiers, par exemple `C:\Users\adesvalcy\Downloads\hadoop-cc2\`. Le mot de passe demandé à chaque fois est `maria_dev`.
+
+Vérifier que tous les fichiers sont bien arrivés sur le cluster (dans le terminal SSH) :
+
+```bash
+ls ~/ | grep -E ".py|.csv"
+```
+
 ### Chargement dans HDFS
 
 ```bash
@@ -89,7 +146,7 @@ if __name__ == '__main__':
 **Lancement Hadoop :**
 
 ```bash
-python scripts/tags_per_movie.py -r hadoop \
+python tags_per_movie.py -r hadoop \
   --hadoop-streaming-jar /usr/hdp/current/hadoop-mapreduce-client/hadoop-streaming.jar \
   hdfs:///user/maria_dev/tags.csv \
   -o hdfs:///user/maria_dev/output_tags_per_movie
@@ -168,7 +225,7 @@ if __name__ == '__main__':
 **Lancement Hadoop :**
 
 ```bash
-python scripts/tags_per_user.py -r hadoop \
+python tags_per_user.py -r hadoop \
   --hadoop-streaming-jar /usr/hdp/current/hadoop-mapreduce-client/hadoop-streaming.jar \
   hdfs:///user/maria_dev/tags.csv \
   -o hdfs:///user/maria_dev/output_tags_per_user
@@ -272,7 +329,7 @@ if __name__ == '__main__':
 **Lancement Hadoop :**
 
 ```bash
-python scripts/tag_count.py -r hadoop \
+python tag_count.py -r hadoop \
   --hadoop-streaming-jar /usr/hdp/current/hadoop-mapreduce-client/hadoop-streaming.jar \
   hdfs:///user/maria_dev/tags_64mb.csv \
   -o hdfs:///user/maria_dev/output_tag_count
@@ -353,7 +410,7 @@ if __name__ == '__main__':
 **Lancement Hadoop :**
 
 ```bash
-python scripts/tags_per_movie_user.py -r hadoop \
+python tags_per_movie_user.py -r hadoop \
   --hadoop-streaming-jar /usr/hdp/current/hadoop-mapreduce-client/hadoop-streaming.jar \
   hdfs:///user/maria_dev/tags_64mb.csv \
   -o hdfs:///user/maria_dev/output_tags_per_movie_user
